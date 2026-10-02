@@ -1,0 +1,7 @@
+element,magnet_relevant,china_share_pct,other_source_1,other_1_pct,other_source_2,other_2_pct,notes
+Terbium,yes_hre_magnet_additive,100,,,,,"Used with dysprosium in neodymium magnets to retain magnetism at high motor operating temperatures"
+Dysprosium,yes_hre_magnet_additive,NA,,,,,"Not broken out in this table's import-source list; treated separately below via secondary sourcing"
+Holmium,no,100,,,,,
+Lutetium,no,100,,,,,
+Erbium,no,51,Germany,51,Netherlands,9,"China is secondary source at 40%"
+Ytterbium,no,86,Germany,4,Chile,4,"Also Republic of Korea 3%, other 3%"
