@@ -1,25 +1,23 @@
 """
 Country/supplier concentration risk for critical minerals (rare earths).
 
-Core idea, same one used in the pharma-shortage-risk project: concentration
-of supply is the risk signal. Here that means how few countries (or, for
-heavy rare earths, how few source countries for US imports) account for
-most of the supply of a given material.
+Same core idea as the pharma-shortage-risk project: concentration of
+supply is the risk signal. Here that's how few countries (or, for
+heavy rare earths, how few import sources) account for most of the
+supply of a given material.
 
-Three separate concentration metrics are computed on purpose, not collapsed
-into one score, because they answer different questions (see data/README.md
+Three concentration metrics, kept separate rather than collapsed into
+one score, since they answer different questions (see data/README.md
 for why they diverge):
-
 1. Mine production concentration (who digs it up)
-2. Reserve concentration (who could dig it up in the future)
-3. Import-source concentration for heavy rare earths (who the US actually
-   buys the magnet-grade elements from right now)
+2. Reserve concentration (who could dig it up later)
+3. Import-source concentration for heavy rare earths (who the US
+   actually buys magnet-grade elements from right now)
 
-A country/element is flagged high risk if a small number of suppliers
-account for most of the volume, using both a top-1 share and an HHI
-(Herfindahl-Hirschman Index, sum of squared market shares, 0-10000, higher
-means more concentrated, a standard concentration measure also used in
-antitrust analysis).
+High risk = a small number of suppliers account for most of the
+volume, measured with top-1 share and HHI (Herfindahl-Hirschman Index,
+sum of squared shares, 0-10000, higher = more concentrated - standard
+antitrust-style concentration measure).
 """
 
 import pandas as pd
@@ -27,14 +25,13 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
-# Rows that aren't real countries and should be excluded from concentration
-# math (including them would understate concentration, since "Other" and
-# "World Total" aren't actual competing suppliers).
+# not real countries, exclude from the concentration math - including
+# "Other"/"World Total" would understate concentration
 NON_COUNTRY_ROWS = {"World Total", "Other"}
 
 
 def _clean_numeric(series):
-    """USGS tables use '—' for zero/none and 'NA' for not available."""
+    # USGS tables use '—' for zero/none, 'NA' for not available
     return pd.to_numeric(
         series.astype(str).str.replace(",", "").replace({"—": "0", "NA": None}),
         errors="coerce",
@@ -42,7 +39,6 @@ def _clean_numeric(series):
 
 
 def hhi(shares_pct):
-    """Herfindahl-Hirschman Index from a list of percentage shares (0-100)."""
     return sum(s**2 for s in shares_pct)
 
 
@@ -55,11 +51,9 @@ def load_production_reserves():
 
 
 def concentration_by_year(df, value_col):
-    """
-    For each (source_report, data_year), compute each country's share of
-    the total, then the top-1 share and HHI across countries.
-    Rows with missing/zero value_col are dropped for that metric only.
-    """
+    # per (source_report, data_year): each country's share of the
+    # total, then top-1 share and HHI. rows missing/zero for value_col
+    # are dropped for that metric only
     results = []
     for (report, year), grp in df.groupby(["source_report", "data_year"]):
         grp = grp.dropna(subset=[value_col])
@@ -90,12 +84,8 @@ def load_heavy_ree_import_reliance():
 
 
 def heavy_ree_risk_tiers(df):
-    """
-    Simple, honest tiering for US import-source concentration on heavy
-    rare earths (the magnet-grade elements). Not a continuous score here,
-    the underlying table only has 5 elements, a 3-bucket tier is more
-    honest than pretending there's enough resolution for a smooth index.
-    """
+    # 3 buckets, not a continuous score - the underlying table only
+    # covers 5 elements, so a smooth index would be fake precision
     def tier(china_share):
         if pd.isna(china_share):
             return "unknown (not broken out in source table)"
@@ -121,7 +111,6 @@ def load_shock_events():
 
 
 def summarize():
-    """One-call summary used by the notebook and by tests."""
     prod_res = load_production_reserves()
     conc = pd.concat(
         [
